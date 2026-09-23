@@ -121,13 +121,4 @@ if __name__ == "__main__":
         for schluessel, wert in testergebnisse.items():
             datei.write(f"{schluessel}: {wert}\n")   
 
-#%%
-knoten, kanten, gewichte = random_graph(30,0.7)
-
-maxcut = MaxCliqueSolve(knoten, gewichte, kanten)
-zeiten = timeit.repeat(
-            MaxCliqueSolve.maxclique_solve("Lovasz"),
-            repeat=1,
-            number=1
-)  
-print(zeiten)                  
+               

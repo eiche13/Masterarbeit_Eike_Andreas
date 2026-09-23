@@ -189,7 +189,8 @@ class MaxCliqueSolve:
             self.v = []
             self._q_sdp, self._Q_sdp = self._solve_sdp_dual(self.vertices)
             self._idx_map = {int(v): i for i, v in enumerate(self.vertices)}
-            self._lovasz_lb_init()
+            delta = (2 * len(self.edges)) / (self.n ** 2)
+            self.lb = self.n if delta >= 1.0 else 1.0 / (1.0 - delta)
             self._clique_rec_lovasz(self.vertices, 0)
             return self.m, sorted(self.c)
 
@@ -207,7 +208,7 @@ class MaxCliqueSolve:
             LB = ceil(1 / (1 - delta)),   delta = 2m / n^2
         """
         delta = (2 * len(self.edges)) / (self.n ** 2)
-        lb = self.n if delta >= 1.0 else math.ceil(1.0 / (1.0 - delta))
+        lb = self.n if delta >= 1.0 else 1.0 / (1.0 - delta)
         if lb > self.m:
             self.m = lb
 
@@ -352,8 +353,8 @@ class MaxCliqueSolve:
         """
         Branch-and-Bound mit Lovász-Schranke.
 
-        Bound:    size + theta(G_bar[U]) <= LB(G[U])  ->  prunen
-                  LB(G[U]) = ceil(1 / (1 - delta_U))  (Kantendichte-Schranke)
+        Bound:    size + theta(G_bar[U]) <= LB(G)  ->  prunen
+                  LB(G) = ceil(1 / (1 - delta_G))  (Kantendichte-Schranke)
         Branching: zufälliger Knoten aus der via Algorithm 2 konstruierten Clique.
         """
     
@@ -364,12 +365,9 @@ class MaxCliqueSolve:
             return
 
         while len(U) != 0:
-            U_set = set(int(u) for u in U)
-            m_U = sum(1 for (a, b) in self.edges if a in U_set and b in U_set)
-            delta_U = (2 * m_U) / (len(U) ** 2)
-            lb_U = len(U) if delta_U >= 1.0 else math.ceil(1.0 / (1.0 - delta_U))
 
-            if size + self._lovasz_rest(U) <= lb_U:
+
+            if size + self._lovasz_rest(U) <= self.lb:
                 return
 
             vi = random.choice(self._rounding(U, self._q_sdp, self._Q_sdp))
