@@ -205,7 +205,7 @@ class MaxCliqueSolve:
         """
         Initiale untere Schranke für die Cliquenzahl via Kantendichte:
 
-            LB = ceil(1 / (1 - delta)),   delta = 2m / n^2
+            LB = (1 / (1 - delta)),   delta = 2m / n^2
         """
         delta = (2 * len(self.edges)) / (self.n ** 2)
         lb = self.n if delta >= 1.0 else 1.0 / (1.0 - delta)
@@ -353,8 +353,8 @@ class MaxCliqueSolve:
         """
         Branch-and-Bound mit Lovász-Schranke.
 
-        Bound:    size + theta(G_bar[U]) <= LB(G)  ->  prunen
-                  LB(G) = ceil(1 / (1 - delta_G))  (Kantendichte-Schranke)
+        Bound:    size + theta(G_bar[U]) < LB(G)  ->  prunen
+                  LB(G) = (1 / (1 - delta_G))  (Kantendichte-Schranke)
         Branching: zufälliger Knoten aus der via Algorithm 2 konstruierten Clique.
         """
     
@@ -367,7 +367,7 @@ class MaxCliqueSolve:
         while len(U) != 0:
 
 
-            if size + self._lovasz_rest(U) <= self.lb:
+            if size + self._lovasz_rest(U) < self.lb:
                 return
 
             vi = random.choice(self._rounding(U, self._q_sdp, self._Q_sdp))
