@@ -12,11 +12,8 @@ class MaxCliqueSolve:
         self.weights = weights
         self.edges = edges
         self.n = len(vertices)
-    '''TODO: Schreibe Check, ob vertices ein 1d-Array in Form einer Range ist, kontrolliere, dass die weights gleichlang 
-             wie die vertices sind und kontrolliere, dass es keine Duplikate/Permutationen oder "Paare" in den edges gibt.'''
 
     def clique_to_cut(self):
-        '''TODO: check if output ist sinnvoll gewählt oder die Funktion noch erweitert werden muss um besseren Output liefern zu können'''
         w = 2 * (self.n - 1) * np.max(self.weights)
         W = np.ones((self.n, self.n)) * -w
         for edge in self.edges:
@@ -33,21 +30,6 @@ class MaxCliqueSolve:
     def maxcut_solve_GW(self, arg = "GW"):
         """
         Goemans-Williamson-Algorithmus für das Max-Cut Problem.
-
-        Arbeitet auf der verschobenen Gewichtsmatrix W_shift aus _shift_weights(),
-        die aus clique_to_cut() gewonnen wird. Die Verschiebung stellt sicher,
-        dass alle Einträge der unteren Dreiecksmatrix nicht-negativ sind.
-
-        Vorgehen:
-          1. Berechne W_dach = clique_to_cut(), verschiebe zu W_shift via _shift_weights()
-          2. SDP:  max  sum_{i<j} W_shift_ij * (1 - Y_ij)
-                   s.t. Y >= 0 (psd),  Y_ii = 1 für alle i
-          3. Cholesky-Zerlegung von Y -> Vektoren v_i
-          4. Zufälliger Hyperebenen-Schnitt: wähle r ~ N(0, I),
-             setze x_i = sign(r^T v_i)
-          5. Wiederhole Schritt 4 mehrfach, behalte besten Schnitt.
-          6. Rückübersetzung: Knoten auf der dem Lift-Knoten gegenüberliegenden
-             Seite sind Clique-Kandidaten.
 
         Returns
         -------
@@ -116,6 +98,7 @@ class MaxCliqueSolve:
         bound    : float  – Nesterov-Schranke
         s_upper  : float  – Optimalwert s*(L)
         s_lower  : float  – Optimalwert s_*(L)"""
+        
         L = self.clique_to_cut()
         n1 = L.shape[0]
 
@@ -198,19 +181,8 @@ class MaxCliqueSolve:
             raise NotImplementedError(f'Das Argument {arg} ist nicht erlaubt.')
 
     # -----------------------------------------------------------------------
-    # Lovász Branch-and-Bound Hilfsfunktionen
+    # Hilfsfunktionen
     # -----------------------------------------------------------------------
-
-    def _lovasz_lb_init(self):
-        """
-        Initiale untere Schranke für die Cliquenzahl via Kantendichte:
-
-            LB = (1 / (1 - delta)),   delta = 2m / n^2
-        """
-        delta = (2 * len(self.edges)) / (self.n ** 2)
-        lb = self.n if delta >= 1.0 else 1.0 / (1.0 - delta)
-        if lb > self.m:
-            self.m = lb
 
     def _complement_edges(self, U):
         """
@@ -264,7 +236,7 @@ class MaxCliqueSolve:
 
     def _vsdp(self, S_local, q, Q):
         """
-        Wertet V_SDP(S) = q_S^T Q_S^† q_S aus (Lemma 2.7 im Paper).
+        Wertet V_SDP(S) = q_S^T Q_S^† q_S aus (Lemma 2.7 (Gong, Cifuentes, Toriello 2025)).
 
         Nutzt die QP-Charakterisierung: V_SDP(S) = -min_y  y^T Q_S y - 2 q_S^T y
         mit Regularisierung lambda = 1e-4 für numerische Stabilität.
@@ -379,10 +351,6 @@ class MaxCliqueSolve:
             U = U[U != vi]
             
 
-    # -----------------------------------------------------------------------
-    # Bestehende Hilfsfunktionen
-    # -----------------------------------------------------------------------
-
     def clique_rec(self, U, size):
         if len(U) == 0:
             if size > self.m:
@@ -419,7 +387,6 @@ class MaxCliqueSolve:
             self.v.pop()
 
     def clique_rec_o(self, U, size):
-        '''TODO: Mitschreiben der Clique klappt nicht: FIXEN'''
         if len(U) == 0:
             if size > self.m:
                 self.m = size
